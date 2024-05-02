@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html ng-app="ShoppingListCheckOff">
+  <head>
+    <title>Shopping List Check Off</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  </head>
+  <body>
+    <div ng-controller="ToBuyController as toBuy">
+      <h2>To Buy:</h2>
+      <ul>
+        <li ng-repeat="item in toBuy.items">
+          Buy {{item.quantity}} {{item.name}}
+          <button ng-click="toBuy.markAsBought($index)">Bought</button>
+        </li>
+      </ul>
+      <p ng-if="toBuy.items.length === 0">Everything is bought!</p>
+    </div>
+
+    <!-- bought -->
+    <div ng-controller="AlreadyBoughtController as alreadyBought">
+      <h2>Already Bought:</h2>
+      <ul>
+        <li ng-repeat="item in alreadyBought.items">
+          Bought {{item.quantity}} {{item.name}}
+        </li>
+        <p ng-if="alreadyBought.items.length === 0">Nothing bought yet.</p>
+      </ul>
+    </div>
+
+    <script>
+      angular
+        .module("ShoppingListCheckOff", [])
+        .controller("ToBuyController", function () {
+          this.items = [
+            { name: "cookies", quantity: 10 },
+            { name: "apples", quantity: 5 },
+            { name: "bananas", quantity: 6 },
+            { name: "milk", quantity: 2 },
+            { name: "bread", quantity: 1 },
+          ];
+
+          this.markAsBought = function (index) {
+            var boughtItem = this.items.splice(index, 1)[0];
+            alreadyBought.addItem(boughtItem);
+          };
+        })
+        .controller("AlreadyBoughtController", function () {
+          this.items = [];
+
+          this.addItem = function (item) {
+            this.items.push(item);
+          };
+        });
+    </script>
+  </body>
+</html>
