@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="MenuSearchApp">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Menu Search</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script>
+      angular.module("MenuSearchApp", []).controller("MenuSearchController", [
+        "$http",
+        function ($http) {
+          var controller = this;
+          controller.searchTerm = "";
+          controller.foundItems = [];
+
+          controller.narrowItDown = function () {
+            if (controller.searchTerm.trim() === "") {
+              controller.foundItems = [];
+              return;
+            }
+
+            $http({
+              method: "GET",
+              url: "https://davids-restaurant.herokuapp.com/menu_items.json",
+            }).then(function (response) {
+              var menuItems = response.data.menu_items;
+              controller.foundItems = [];
+
+              menuItems.forEach(function (item) {
+                if (
+                  item.description
+                    .toLowerCase()
+                    .indexOf(controller.searchTerm.toLowerCase()) !== -1
+                ) {
+                  controller.foundItems.push(item);
+                }
+              });
+
+              if (controller.foundItems.length === 0) {
+                controller.message = "Nothing found";
+              } else {
+                controller.message = "";
+              }
+            });
+          };
+
+          controller.removeItem = function (index) {
+            controller.foundItems.splice(index, 1);
+          };
+        },
+      ]);
+    </script>
+  </head>
+  <body ng-controller="MenuSearchController as menu">
+    <h1>Menu Search</h1>
+    <input type="text" placeholder="Search term" ng-model="menu.searchTerm" />
+    <button ng-click="menu.narrowItDown()">Narrow It Down For Me!</button>
+    <p>{{ menu.message }}</p>
+    <ul>
+      <li ng-repeat="item in menu.foundItems">
+        <h2>{{ item.name }}</h2>
+        <p>{{ item.short_name }}, {{ item.description }}</p>
+        <button ng-click="menu.removeItem($index)">Don't want this one!</button>
+      </li>
+    </ul>
+  </body>
+</html>
