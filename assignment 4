@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="RestaurantApp">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Restaurant Menu</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular-route.min.js"></script>
+    <script>
+      angular
+        .module("RestaurantApp", ["ngRoute"])
+        .config([
+          "$routeProvider",
+          function ($routeProvider) {
+            $routeProvider
+              .when("/", {
+                templateUrl: "home.html",
+              })
+              .when("/categories", {
+                templateUrl: "categories.html",
+                controller: "CategoriesController as categoriesCtrl",
+              })
+              .when("/items/:category", {
+                templateUrl: "items.html",
+                controller: "ItemsController as itemsCtrl",
+              })
+              .otherwise({
+                redirectTo: "/",
+              });
+          },
+        ])
+        .controller("CategoriesController", [
+          "$http",
+          function ($http) {
+            var categoriesCtrl = this;
+            categoriesCtrl.categories = [];
+
+            $http({
+              method: "GET",
+              url: "https://davids-restaurant.herokuapp.com/categories.json",
+            }).then(function (response) {
+              categoriesCtrl.categories = response.data;
+            });
+          },
+        ])
+        .controller("ItemsController", [
+          "$http",
+          "$routeParams",
+          function ($http, $routeParams) {
+            var itemsCtrl = this;
+            itemsCtrl.category = $routeParams.category;
+            itemsCtrl.items = [];
+
+            $http({
+              method: "GET",
+              url:
+                "https://davids-restaurant.herokuapp.com/menu_items.json?category=" +
+                itemsCtrl.category,
+            }).then(function (response) {
+              itemsCtrl.items = response.data.menu_items;
+            });
+          },
+        ]);
+    </script>
+  </head>
+  <body>
+    <div ng-view></div>
+
+    <script type="text/ng-template" id="home.html">
+      <h1>Welcome to our Restaurant</h1>
+      <a href="#/categories">View Categories</a>
+    </script>
+
+    <script type="text/ng-template" id="categories.html">
+      <h1>Categories</h1>
+      <ul>
+          <li ng-repeat="category in categoriesCtrl.categories">
+              <a href="#/items/{{ category.short_name }}">{{ category.name }}</a>
+          </li>
+      </ul>
+    </script>
+
+    <script type="text/ng-template" id="items.html">
+      <h1>Menu Items for {{ itemsCtrl.category }}</h1>
+      <ul>
+          <li ng-repeat="item in itemsCtrl.items">
+              {{ item.name }} - {{ item.description }}
+          </li>
+      </ul>
+    </script>
+  </body>
+</html>
