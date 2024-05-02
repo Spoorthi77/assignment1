@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="RestaurantApp">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Restaurant Menu</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+    <script>
+      angular
+        .module("RestaurantApp", ["ngRoute"])
+        .config([
+          "$routeProvider",
+          function ($routeProvider) {
+            $routeProvider
+              .when("/", {
+                templateUrl: "home.html",
+              })
+              .when("/signup", {
+                templateUrl: "signup.html",
+                controller: "SignupController as signupCtrl",
+              })
+              .when("/myinfo", {
+                templateUrl: "myinfo.html",
+                controller: "MyInfoController as myInfoCtrl",
+              })
+              .otherwise({
+                redirectTo: "/",
+              });
+          },
+        ])
+        .controller("HeaderController", function () {
+          this.tab = 1;
+
+          this.setTab = function (tabIndex) {
+            this.tab = tabIndex;
+          };
+
+          this.isSet = function (tabIndex) {
+            return this.tab === tabIndex;
+          };
+        })
+        .controller("SignupController", [
+          "$http",
+          function ($http) {
+            var signupCtrl = this;
+            signupCtrl.formData = {};
+            signupCtrl.favoriteItem = {};
+            signupCtrl.saved = false;
+
+            signupCtrl.submitForm = function () {
+              // Validate form data
+              if (signupCtrl.signupForm.$invalid) {
+                return;
+              }
+
+              // Check if the favorite menu number exists
+              $http({
+                method: "GET",
+                url:
+                  "https://coursera-jhu-default-rtdb.firebaseio.com/menu_items/" +
+                  signupCtrl.formData.favoriteMenu +
+                  ".json",
+              }).then(function (response) {
+                if (response.data) {
+                  signupCtrl.favoriteItem = response.data;
+                  signupCtrl.saved = true;
+                } else {
+                  signupCtrl.favoriteItem = {};
+                  signupCtrl.saved = false;
+                  signupCtrl.signupForm.favoriteMenu.$setValidity(
+                    "exists",
+                    false
+                  );
+                }
+              });
+            };
+          },
+        ])
+        .controller("MyInfoController", function () {
+          // Placeholder controller for My Info view
+        });
+    </script>
+  </head>
+  <body>
+    <div ng-controller="HeaderController as header">
+      <button ng-click="header.setTab(1)" ng-class="{active: header.isSet(1)}">
+        My Info
+      </button>
+      <button ng-click="header.setTab(2)" ng-class="{active: header.isSet(2)}">
+        Sign Up
+      </button>
+    </div>
+
+    <div ng-view></div>
+
+    <script type="text/ng-template" id="home.html">
+      <h1>Welcome to our Restaurant</h1>
+      <a href="#/signup">Sign Up</a>
+    </script>
+
+    <script type="text/ng-template" id="signup.html">
+      <h1>Sign Up</h1>
+      <form name="signupCtrl.signupForm" ng-submit="signupCtrl.submitForm()" novalidate>
+          <label for="firstName">First Name:</label>
+          <input type="text" id="firstName" name="firstName" ng-model="signupCtrl.formData.firstName" required><br>
+
+          <label for="lastName">Last Name:</label>
+          <input type="text" id="lastName" name="lastName" ng-model="signupCtrl.formData.lastName" required><br>
+
+          <label for="email">Email Address:</label>
+          <input type="email" id="email" name="email" ng-model="signupCtrl.formData.email" required><br>
+
+          <label for="phone">Phone Number:</label>
+          <input type="tel" id="phone" name="phone" ng-model="signupCtrl.formData.phone" required><br>
+
+          <label for="favoriteMenu">Favorite Menu Number:</label>
+          <input type="text" id="favoriteMenu" name="favoriteMenu" ng-model="signupCtrl.formData.favoriteMenu" required>
+          <span ng-show="signupCtrl.signupForm.favoriteMenu.$error.exists">No such menu number exists</span><br>
+
+          <button type="submit">Submit</button>
+      </form>
+      <p ng-show="signupCtrl.saved">Your information has been saved</p>
+    </script>
+
+    <script type="text/ng-template" id="myinfo.html">
+      <h1>My Info</h1>
+      <div ng-show="!signupCtrl.saved">Not Signed Up Yet. <a href="#/signup">Sign up Now!</a></div>
+      <div ng-show="signupCtrl.saved">
+          <h2>{{ signupCtrl.formData.firstName }} {{ signupCtrl.formData.lastName }}</h2>
+          <p>Email: {{ signupCtrl.formData.email }}</p>
+          <p>Phone: {{ signupCtrl.formData.phone }}</p>
+          <h3>Favorite Menu Item</h3>
+          <img ng-src="{{ signupCtrl.favoriteItem.image }}" alt="{{ signupCtrl.favoriteItem.name }}">
+          <p>{{ signupCtrl.favoriteItem.name }} - {{ signupCtrl.favoriteItem.description }}</p>
+      </div>
+    </script>
+  </body>
+</html>
